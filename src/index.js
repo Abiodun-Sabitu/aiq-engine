@@ -15,3 +15,15 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
+
+//simple test route
+
+app.get("/", (req, res) => {
+  res.send("AIQ Engine Backend is running with ES Modules!");
+});
+
+//start server
+const PORT = process.eventNames.PORT || 5000;
+app.listen(PORT, () => {
+  console.log("Server is listening on port " + PORT);
+});
