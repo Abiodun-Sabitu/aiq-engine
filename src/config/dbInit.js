@@ -29,18 +29,18 @@ const createTables = async () => {
     // Create users AFTER badges
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+				id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+				clerk_user_id TEXT UNIQUE NOT NULL, -- Store Clerk’s User ID
+				username TEXT UNIQUE DEFAULT NULL,
         email TEXT UNIQUE NOT NULL,
-        username TEXT UNIQUE NOT NULL,
-        avatar_url TEXT DEFAULT NULL,
-        password TEXT NOT NULL,
-        role TEXT CHECK (role IN ('user', 'admin')) DEFAULT 'user',
-        badge_id UUID REFERENCES badges(id) ON DELETE SET NULL,
-        country TEXT DEFAULT NULL,
-        country_flag TEXT DEFAULT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
+				avatar_url TEXT DEFAULT NULL,
+				role TEXT CHECK (role IN ('user', 'admin')) DEFAULT 'user',
+				badge_id UUID REFERENCES badges(id) ON DELETE SET NULL,
+				country TEXT DEFAULT NULL,
+				country_flag TEXT DEFAULT NULL,
+				created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+				);
+   `);
 
     // Other tables remain unchanged
     await pool.query(`

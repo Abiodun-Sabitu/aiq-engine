@@ -4,6 +4,8 @@ import cors from "cors"; // enables cross origin resource sharing so the fronten
 import helmet from "helmet"; // adds security headers to prevent common vulnerabilities
 import morgan from "morgan"; // helps to log HTTP requests for debugging
 import pool from "./config/db.js";
+import { clerkMiddleware } from "@clerk/express";
+import routes from "./routes/index.js";
 // load envs
 dotenv.config();
 
@@ -15,7 +17,20 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
+app.use(
+  clerkMiddleware({
+    secretKey: process.env.CLERK_SECRET_KEY,
+    publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+    onError: (err, req, res) => {
+      console.error("❌ Clerk Auth Error:", err);
+      return res.status(401).json({ error: "Unauthorized" });
+    },
+  })
+);
+console.log("CLERK_SECRET_KEY:", process.env.CLERK_SECRET_KEY);
+console.log("CLERK_PUBLISHABLE_KEY:", process.env.CLERK_PUBLISHABLE_KEY);
 
+app.use("/api", routes);
 //simple test route
 
 app.get("/", (req, res) => {
