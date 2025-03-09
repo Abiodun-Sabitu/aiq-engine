@@ -4,8 +4,8 @@ import dotenv from "dotenv";
 dotenv.config();
 const { Pool } = pkg;
 
-// Create a database pool (allows multiple connections)
-const pool = new Pool({
+// Create a database db (allows multiple connections)
+const db = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl:
     process.env.NODE_ENV === "production"
@@ -14,9 +14,8 @@ const pool = new Pool({
 });
 
 // Test the connection once at startup
-pool
-  .query("SELECT NOW()")
+db.query("SELECT NOW()")
   .then((res) => console.log("✅ Connected to PostgreSQL at:", res.rows[0].now))
   .catch((err) => console.error("❌ Database connection error:", err));
 
-export default pool;
+export default db;

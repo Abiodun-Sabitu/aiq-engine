@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 const { Pool } = pkg;
-const pool = new Pool({
+const db = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl:
     process.env.NODE_ENV === "production"
@@ -16,7 +16,7 @@ const createTables = async () => {
     console.log("⏳ Initializing database...");
 
     // Create badges first
-    await pool.query(`
+    await db.query(`
       CREATE TABLE IF NOT EXISTS badges (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         name TEXT UNIQUE NOT NULL,
@@ -27,23 +27,30 @@ const createTables = async () => {
     `);
 
     // Create users AFTER badges
-    await pool.query(`
+    await db.query(`
       CREATE TABLE IF NOT EXISTS users (
-				id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-				clerk_user_id TEXT UNIQUE NOT NULL, -- Store Clerk’s User ID
-				username TEXT UNIQUE DEFAULT NULL,
-        email TEXT UNIQUE NOT NULL,
-				avatar_url TEXT DEFAULT NULL,
-				role TEXT CHECK (role IN ('user', 'admin')) DEFAULT 'user',
-				badge_id UUID REFERENCES badges(id) ON DELETE SET NULL,
-				country TEXT DEFAULT NULL,
-				country_flag TEXT DEFAULT NULL,
-				created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-				);
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      email TEXT UNIQUE NOT NULL,
+      username TEXT UNIQUE DEFAULT NULL,
+      avatar_url TEXT DEFAULT NULL,
+      role TEXT CHECK (role IN ('user', 'admin')) DEFAULT 'user',
+      badge_id UUID REFERENCES badges(id) ON DELETE SET NULL,
+      country TEXT DEFAULT NULL,
+      country_flag TEXT DEFAULT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      last_login TIMESTAMP DEFAULT NULL,
+      provider TEXT CHECK (provider IN ('google', 'facebook', 'twitter')) DEFAULT 'local',
+      provider_user_id TEXT DEFAULT NULL,
+      jwt_token TEXT DEFAULT NULL,  -- Store JWT for session management
+      magic_link_token TEXT DEFAULT NULL,  -- Store token for magic link authentication
+      magic_link_expiry TIMESTAMP DEFAULT NULL  -- Token expiration time
+    );
+
    `);
 
     // Other tables remain unchanged
-    await pool.query(`
+    await db.query(`
       CREATE TABLE IF NOT EXISTS quizzes (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         difficulty TEXT CHECK (difficulty IN ('beginner', 'intermediate', 'advanced')) NOT NULL,
@@ -54,7 +61,7 @@ const createTables = async () => {
       );
     `);
 
-    await pool.query(`
+    await db.query(`
       CREATE TABLE IF NOT EXISTS questions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         quiz_id UUID REFERENCES quizzes(id) ON DELETE CASCADE,
@@ -66,7 +73,7 @@ const createTables = async () => {
       );
     `);
 
-    await pool.query(`
+    await db.query(`
       CREATE TABLE IF NOT EXISTS user_progress (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -77,7 +84,7 @@ const createTables = async () => {
       );
     `);
 
-    await pool.query(`
+    await db.query(`
       CREATE TABLE IF NOT EXISTS user_scores (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -88,7 +95,7 @@ const createTables = async () => {
       );
     `);
 
-    await pool.query(`
+    await db.query(`
       CREATE TABLE IF NOT EXISTS attempts_log (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -100,7 +107,7 @@ const createTables = async () => {
       );
     `);
 
-    await pool.query(`
+    await db.query(`
       CREATE TABLE IF NOT EXISTS leaderboard (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -111,7 +118,7 @@ const createTables = async () => {
     `);
 
     // Insert default badges after creating badges table
-    await pool.query(`
+    await db.query(`
       INSERT INTO badges (id, name, criteria, image_url) VALUES
         (gen_random_uuid(), 'Rookie', 'Default badge for new users', 'https://example.com/badge-placeholder.png'),
         (gen_random_uuid(), 'Explorer', 'Completed the first quiz', 'https://example.com/badge-placeholder.png'),
@@ -127,7 +134,7 @@ const createTables = async () => {
   } catch (error) {
     console.error("❌ Error creating tables:", error);
   } finally {
-    pool.end();
+    db.end();
   }
 };
 
