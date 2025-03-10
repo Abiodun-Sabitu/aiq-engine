@@ -5,6 +5,7 @@ import helmet from "helmet"; // adds security headers to prevent common vulnerab
 import morgan from "morgan"; // helps to log HTTP requests for debugging
 import db from "./config/db.js";
 import routes from "./routes/index.js";
+import cookieParser from "cookie-parser";
 // load envs
 dotenv.config();
 
@@ -13,7 +14,8 @@ const app = express();
 
 //assign middlewares to be used by Express app
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser());
+app.use(cors({}));
 app.use(helmet());
 app.use(morgan("dev"));
 app.use("/api", routes);

@@ -7,6 +7,8 @@ dotenv.config();
 export const validateMagicLink = async (req, res) => {
   const { email, token } = req.query;
 
+  console.log(email, token);
+
   if (!email || !token) {
     return res.status(400).json({ message: "Email and token are required" });
   }
@@ -47,9 +49,9 @@ export const validateMagicLink = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 3 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
     });
-
+    console.log("refreshToken", refreshToken);
     const lastLoginDate = new Date(Date.now());
     await db.query(`UPDATE users SET last_login=$1 WHERE email=$2`, [
       lastLoginDate,
