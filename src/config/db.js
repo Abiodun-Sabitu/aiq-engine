@@ -15,7 +15,7 @@ const db = new Pool({
 
 // Test the connection once at startup
 db.query("SELECT NOW()")
-  .then((res) => console.log("✅ Connected to PostgreSQL at:", res.rows[0].now))
+  .then((res) => console.log("✅ DB Connected! at:", res.rows[0].now))
   .catch((err) => console.error("❌ Database connection error:", err));
 
 export default db;

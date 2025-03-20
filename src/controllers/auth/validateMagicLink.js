@@ -51,7 +51,7 @@ export const validateMagicLink = async (req, res) => {
       sameSite: "strict",
       maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
     });
-    console.log("refreshToken", refreshToken);
+
     const lastLoginDate = new Date(Date.now());
     await db.query(`UPDATE users SET last_login=$1 WHERE email=$2`, [
       lastLoginDate,

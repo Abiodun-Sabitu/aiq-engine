@@ -37,7 +37,9 @@ export const magicLink = async (req, res) => {
       userMailBox = email;
       subject = "🎉 Almost there! Your AIQ login is just one click away";
       content = magicLinkEmail(
-        `${process.env.BASE_URL}/auth/magic-login?email=${encodeURIComponent(
+        `${
+          process.env.BASE_URL
+        }/api/auth/magic-login?email=${encodeURIComponent(
           email
         )}&token=${encodeURIComponent(magicLinkToken)}`
       );
@@ -56,7 +58,7 @@ export const magicLink = async (req, res) => {
     userMailBox = email;
     subject = "Your AIQ magic login link";
     content = magicLinkEmail(
-      `${process.env.BASE_URL}/auth/magic-login?email=${encodeURIComponent(
+      `${process.env.BASE_URL}/api/auth/magic-login?email=${encodeURIComponent(
         email
       )}&token=${encodeURIComponent(magicLinkToken)}`
     );

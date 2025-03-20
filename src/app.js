@@ -6,6 +6,8 @@ import morgan from "morgan"; // helps to log HTTP requests for debugging
 import db from "./config/db.js";
 import routes from "./routes/index.js";
 import cookieParser from "cookie-parser";
+import "./config/passportConfig.js";
+import passport from "passport";
 // load envs
 dotenv.config();
 
@@ -19,6 +21,8 @@ app.use(cors({}));
 app.use(helmet());
 app.use(morgan("dev"));
 app.use("/api", routes);
+// Initialize Passport
+app.use(passport.initialize());
 
 //simple test route
 app.get("/", (req, res) => {
