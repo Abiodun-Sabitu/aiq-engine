@@ -1,50 +1,43 @@
-import db from "../../config/db.js";
+import {
+  findUserByEmail,
+  getUserDetails,
+  updateLastLogin,
+} from "../../models/userModels.js";
 import { generateTokens } from "../../helpers/generateToken.js";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 export const validateMagicLink = async (req, res) => {
   const { email, token } = req.query;
 
-  console.log(email, token);
-
   if (!email || !token) {
-    return res.status(400).json({ message: "Email and token are required" });
+    return res.status(400).json({ message: "Email and auth are required" });
   }
 
   try {
-    // Find the user by email
-    const { rows: users } = await db.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
-    );
+    const user = await findUserByEmail(email);
 
-    if (users.length === 0) {
+    if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const user = users[0];
-
-    // Validate the magic link token
-    if (!user.magic_link_token || user.magic_link_token !== token) {
-      return res.status(400).json({ message: "Invalid or expired token" });
+    // Validate the magic link token and expiry in a single check
+    if (
+      user.magic_link_token !== token ||
+      new Date(user.magic_link_expiry).getTime() < Date.now()
+    ) {
+      return res.status(400).json({ message: "Invalid or expired magic link" });
     }
 
-    const currentTime = Date.now();
-    if (user.magic_link_expiry < currentTime) {
-      return res.status(400).json({ message: "Token has expired" });
-    }
-
+    // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user);
-    // Store access token token in httpOnly cookie
+
+    // Store tokens in HTTP-only cookies
     res.cookie("auth_token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 30 * 60 * 1000, // 30 min
+      maxAge: 30 * 60 * 1000, // 30 minutes
     });
-    // Store refresh token in httpOnly cookie
+
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -52,13 +45,15 @@ export const validateMagicLink = async (req, res) => {
       maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
     });
 
-    const lastLoginDate = new Date(Date.now());
-    await db.query(`UPDATE users SET last_login=$1 WHERE email=$2`, [
-      lastLoginDate,
-      email,
-    ]);
+    // Update last login timestamp
+    await updateLastLogin(email);
 
-    res.status(200).json({ message: "Authentication successful", user });
+    // Retrieve user details without sensitive fields
+    const userDetails = await getUserDetails(email);
+
+    res
+      .status(200)
+      .json({ message: "Authentication successful", user: userDetails });
   } catch (err) {
     console.error("Error during magic link validation:", err);
     res.status(500).json({ message: "Internal Server Error" });

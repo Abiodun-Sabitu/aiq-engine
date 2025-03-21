@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendMail(userMailBox, content, subject) {
-  console.log("userMailBox is", userMailBox);
+  // console.log("userMailBox is", userMailBox);
   const mailOptions = {
     from: `"Magic Link from AIQ" ${process.env.SMTP_USER}`,
     to: userMailBox,

@@ -1,5 +1,9 @@
 import passport from "passport";
-import db from "../../config/db.js";
+import {
+  findUserByProviderID,
+  getUserDetails,
+  updateLastLogin,
+} from "../../models/userModels.js";
 import { generateTokens } from "../../helpers/generateToken.js";
 
 // Google OAuth Login
@@ -22,27 +26,25 @@ export const googleCallback = (req, res, next) => {
         // const { id, displayName, emails } = user; // Extract user data from Google profile
         const googleUser = user?._json;
         const { sub: id, given_name: username, email, picture } = googleUser;
+        console.log("kkkk", email);
+        //Check if user already exists in database
+        const existingUser = await findUserByProviderID(id);
 
-        // Check if user already exists in database
-        const { rows } = await db.query(
-          "SELECT * FROM users WHERE provider_user_id = $1",
-          [id]
-        );
-
-        let dbUser;
-        if (rows.length > 0) {
-          dbUser = rows[0]; // User exists, retrieve user details
-        } else {
-          // User does not exist, create a new user in database
-          const newUser = await db.query(
-            "INSERT INTO users (username, email, provider, provider_user_id, avatar_url) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-            [username, email, "google", id, picture]
+        if (!existingUser) {
+          await getAndSaveUserGoogleData(
+            username,
+            email,
+            "google",
+            id,
+            picture
           );
-          dbUser = newUser.rows[0]; // Retrieve newly created user details
         }
 
+        await updateLastLogin(email);
+        const userDetails = await getUserDetails(email);
+
         // Generate JWT access and refresh tokens
-        const { accessToken, refreshToken } = generateTokens(dbUser);
+        const { accessToken, refreshToken } = generateTokens(userDetails);
 
         // Store access token in HttpOnly cookie
         res.cookie("auth_token", accessToken, {
@@ -60,11 +62,14 @@ export const googleCallback = (req, res, next) => {
           maxAge: 3 * 24 * 60 * 60 * 1000,
         });
 
-        return res.status(200).json({ message: "Login successful", dbUser });
-      } catch (dbError) {
         return res
-          .status(500)
-          .json({ message: "Database error", error: dbError });
+          .status(200)
+          .json({ message: "Login successful", user: userDetails });
+      } catch (dbError) {
+        return res.status(500).json({
+          message: "Database error",
+          error: dbError?.message || dbError,
+        });
       }
     }
   )(req, res, next); // Execute Passport authentication
