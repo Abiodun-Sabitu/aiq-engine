@@ -26,6 +26,19 @@ const createTables = async () => {
       );
     `);
 
+    // Insert default badges after creating badges table
+    await db.query(`
+      INSERT INTO badges (id, name, criteria, image_url) VALUES
+        (gen_random_uuid(), 'Rookie', 'Default badge for new users', 'https://example.com/badge-placeholder.png'),
+        (gen_random_uuid(), 'Explorer', 'Completed the first quiz', 'https://example.com/badge-placeholder.png'),
+        (gen_random_uuid(), 'Thinker', 'Answered 10 questions correctly', 'https://example.com/badge-placeholder.png'),
+        (gen_random_uuid(), 'Strategist', 'Achieved 70% accuracy in Intermediate-level quizzes', 'https://example.com/badge-placeholder.png'),
+        (gen_random_uuid(), 'Innovator', 'Scored in the top 10% of the leaderboard', 'https://example.com/badge-placeholder.png'),
+        (gen_random_uuid(), 'AI Guru', 'Successfully completed multiple Advanced-level quizzes', 'https://example.com/badge-placeholder.png'),
+        (gen_random_uuid(), 'Mastermind', 'Consistently ranks in the top leaderboard for a month', 'https://example.com/badge-placeholder.png')
+      ON CONFLICT (name) DO NOTHING;
+    `);
+
     // Create users AFTER badges
     await db.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -34,7 +47,7 @@ const createTables = async () => {
       username TEXT UNIQUE DEFAULT NULL,
       avatar_url TEXT DEFAULT NULL,
       role TEXT CHECK (role IN ('user', 'admin')) DEFAULT 'user',
-      badge_id UUID REFERENCES badges(id) ON DELETE SET NULL,
+      badge_id UUID DEFAULT (SELECT id FROM badges WHERE name = 'Rookie') REFERENCES badges(id),
       country TEXT DEFAULT NULL,
       country_flag TEXT DEFAULT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -115,19 +128,6 @@ const createTables = async () => {
         rank INT NOT NULL DEFAULT 0,
         last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-    `);
-
-    // Insert default badges after creating badges table
-    await db.query(`
-      INSERT INTO badges (id, name, criteria, image_url) VALUES
-        (gen_random_uuid(), 'Rookie', 'Default badge for new users', 'https://example.com/badge-placeholder.png'),
-        (gen_random_uuid(), 'Explorer', 'Completed the first quiz', 'https://example.com/badge-placeholder.png'),
-        (gen_random_uuid(), 'Thinker', 'Answered 10 questions correctly', 'https://example.com/badge-placeholder.png'),
-        (gen_random_uuid(), 'Strategist', 'Achieved 70% accuracy in Intermediate-level quizzes', 'https://example.com/badge-placeholder.png'),
-        (gen_random_uuid(), 'Innovator', 'Scored in the top 10% of the leaderboard', 'https://example.com/badge-placeholder.png'),
-        (gen_random_uuid(), 'AI Guru', 'Successfully completed multiple Advanced-level quizzes', 'https://example.com/badge-placeholder.png'),
-        (gen_random_uuid(), 'Mastermind', 'Consistently ranks in the top leaderboard for a month', 'https://example.com/badge-placeholder.png')
-      ON CONFLICT (name) DO NOTHING;
     `);
 
     console.log("✅ Tables and default badges inserted successfully!");

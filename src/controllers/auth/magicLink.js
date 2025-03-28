@@ -6,7 +6,7 @@ import {
   findUserByEmail,
   createUserWithMagicLink,
   updateMagicLinkTokenAndExpiry,
-} from "../../models/userModels.js";
+} from "../../models/user/onboarding.js";
 
 dotenv.config();
 

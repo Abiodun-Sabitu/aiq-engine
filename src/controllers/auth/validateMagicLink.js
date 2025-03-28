@@ -2,7 +2,7 @@ import {
   findUserByEmail,
   getUserDetails,
   updateLastLogin,
-} from "../../models/userModels.js";
+} from "../../models/user/onboarding.js";
 import { generateTokens } from "../../helpers/generateToken.js";
 
 export const validateMagicLink = async (req, res) => {
@@ -44,6 +44,8 @@ export const validateMagicLink = async (req, res) => {
       sameSite: "strict",
       maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
     });
+
+    console.log("Set-Cookie Headers:", res.getHeaders()["set-cookie"]);
 
     // Update last login timestamp
     await updateLastLogin(email);

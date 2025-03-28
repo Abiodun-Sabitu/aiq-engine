@@ -1,40 +1,48 @@
 import passport from "passport";
 import {
   findUserByProviderID,
-  getAndSaveUserGoogleData,
+  getAndSaveUserFacebookData,
   getUserDetails,
   updateLastLogin,
 } from "../../models/user/onboarding.js";
 import { generateTokens } from "../../helpers/generateToken.js";
 
-// Google OAuth Login
-export const googleLogin = passport.authenticate("google", {
-  scope: ["profile", "email"], // Request Google profile and email
+// Facebook OAuth Login
+export const facebookLogin = passport.authenticate("facebook", {
+  scope: ["email"], // Request Facebook email
   session: true, // Enable session for OAuth
 });
 
-// Google OAuth Callback
-export const googleCallback = (req, res, next) => {
-  passport.authenticate("google", async (err, user, info) => {
+// Facebook OAuth Callback
+export const facebookCallback = (req, res, next) => {
+  passport.authenticate("facebook", async (err, user, info) => {
     if (err || !user) {
       return res.status(400).json({ message: "Authentication failed" });
     }
+    console.log({ user });
 
     try {
-      // Extract user data from Google profile
-      const googleUser = user?._json;
-      const { sub: id, given_name: username, email, picture } = googleUser;
+      // Extract user data from Facebook profile
+      const facebookUser = user?._json;
+      const { id, name: username, email } = facebookUser;
 
-      // Check if user exists in database
+      // If the Facebook account has no email, prevent login
+      if (!email) {
+        return res
+          .status(400)
+          .json({ message: "No email associated with this Facebook account" });
+      }
+
+      // Check if user exists
       let existingUser = await findUserByProviderID(id);
       if (!existingUser) {
-        await getAndSaveUserGoogleData(username, email, "google", id, picture);
+        await getAndSaveUserFacebookData(username, email, "facebook", id);
       }
 
       await updateLastLogin(email);
       const userDetails = await getUserDetails(email);
 
-      // **Persist the user in session temporarily before issuing JWT**
+      // **Persist the user in session before issuing JWT**
       req.login(userDetails, { session: true }, (loginErr) => {
         if (loginErr) {
           return res
@@ -45,7 +53,7 @@ export const googleCallback = (req, res, next) => {
         // Generate JWT access and refresh tokens
         const { accessToken, refreshToken } = generateTokens(userDetails);
 
-        // Store access token in HttpOnly cookie
+        // Store tokens in HttpOnly cookies
         res.cookie("auth_token", accessToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
@@ -53,7 +61,6 @@ export const googleCallback = (req, res, next) => {
           maxAge: 30 * 60 * 1000, // 30 minutes
         });
 
-        // Store refresh token in HttpOnly cookie
         res.cookie("refresh_token", refreshToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
@@ -61,7 +68,7 @@ export const googleCallback = (req, res, next) => {
           maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
         });
 
-        // Destroy session after authentication is complete (optional)
+        // Destroy session after authentication to prevent interference with JWT
         req.session.destroy(() => {
           res
             .status(200)

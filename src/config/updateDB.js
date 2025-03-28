@@ -8,18 +8,18 @@ const db = new Pool({
   connectionString: process.env.DATABASE_URL, // Ensure your DB connection is set in .env
 });
 
-// 🛠️ Function to update the database schema
+//Function to update the database schema
 const updateDatabase = async () => {
   try {
     console.log("⏳ Applying users table updates...");
 
     await db.query("BEGIN"); // Start transaction
 
-    // 2️⃣ Add new columns (if they don't exist)
+    //Add new columns (if they don't exist)
     await db.query(`
-   
-      ALTER TABLE users DROP COLUMN IF EXISTS jwt_token;
-
+      UPDATE users 
+      SET badge_id = (SELECT id FROM badges WHERE name = 'Rookie' LIMIT 1) 
+      WHERE badge_id IS NULL;
     `);
 
     await db.query("COMMIT"); // Apply changes

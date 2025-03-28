@@ -8,6 +8,7 @@ import routes from "./routes/index.js";
 import cookieParser from "cookie-parser";
 import "./config/passportConfig.js";
 import passport from "passport";
+import { configureSession } from "./config/passportConfig.js";
 // load envs
 dotenv.config();
 
@@ -17,13 +18,23 @@ const app = express();
 //assign middlewares to be used by Express app
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "*",
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization", "Set-Cookie"],
+    exposedHeaders: ["Set-Cookie"],
+  })
+);
 app.use(helmet());
 app.use(morgan("dev"));
-app.use("/api", routes);
+
+configureSession(app);
 // Initialize Passport
 app.use(passport.initialize());
+app.use(passport.session()); // Enable persistent login sessions
 
+app.use("/api", routes);
 //simple test route
 app.get("/", (req, res) => {
   res.send("AIQ Engine Backend is running with ES Modules!");

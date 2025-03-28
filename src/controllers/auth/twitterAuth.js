@@ -1,40 +1,48 @@
 import passport from "passport";
 import {
   findUserByProviderID,
-  getAndSaveUserGoogleData,
+  getAndSaveUserTwitterData,
   getUserDetails,
   updateLastLogin,
 } from "../../models/user/onboarding.js";
 import { generateTokens } from "../../helpers/generateToken.js";
 
-// Google OAuth Login
-export const googleLogin = passport.authenticate("google", {
-  scope: ["profile", "email"], // Request Google profile and email
+// Twitter OAuth Login
+export const twitterLogin = passport.authenticate("twitter", {
   session: true, // Enable session for OAuth
 });
 
-// Google OAuth Callback
-export const googleCallback = (req, res, next) => {
-  passport.authenticate("google", async (err, user, info) => {
+// Twitter OAuth Callback
+export const twitterCallback = (req, res, next) => {
+  passport.authenticate("twitter", async (err, user, info) => {
     if (err || !user) {
       return res.status(400).json({ message: "Authentication failed" });
     }
-
     try {
-      // Extract user data from Google profile
-      const googleUser = user?._json;
-      const { sub: id, given_name: username, email, picture } = googleUser;
+      const twitterUser = user._json;
+      const {
+        id_str: id,
+        name: username,
+        email,
+        profile_image_url_https: picture,
+      } = twitterUser;
 
-      // Check if user exists in database
+      // Check if user already exists
       let existingUser = await findUserByProviderID(id);
       if (!existingUser) {
-        await getAndSaveUserGoogleData(username, email, "google", id, picture);
+        await getAndSaveUserTwitterData(
+          username,
+          email,
+          "twitter",
+          id,
+          picture
+        );
       }
 
       await updateLastLogin(email);
       const userDetails = await getUserDetails(email);
 
-      // **Persist the user in session temporarily before issuing JWT**
+      // **Persist the user in session before issuing JWT**
       req.login(userDetails, { session: true }, (loginErr) => {
         if (loginErr) {
           return res
@@ -42,10 +50,10 @@ export const googleCallback = (req, res, next) => {
             .json({ message: "Session error", error: loginErr });
         }
 
-        // Generate JWT access and refresh tokens
+        // Generate JWT tokens
         const { accessToken, refreshToken } = generateTokens(userDetails);
 
-        // Store access token in HttpOnly cookie
+        // Store tokens in HttpOnly cookies
         res.cookie("auth_token", accessToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
@@ -53,7 +61,6 @@ export const googleCallback = (req, res, next) => {
           maxAge: 30 * 60 * 1000, // 30 minutes
         });
 
-        // Store refresh token in HttpOnly cookie
         res.cookie("refresh_token", refreshToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
@@ -61,7 +68,7 @@ export const googleCallback = (req, res, next) => {
           maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
         });
 
-        // Destroy session after authentication is complete (optional)
+        // Destroy session after authentication to prevent interference with JWT
         req.session.destroy(() => {
           res
             .status(200)
@@ -71,7 +78,7 @@ export const googleCallback = (req, res, next) => {
     } catch (dbError) {
       return res.status(500).json({
         message: "Database error",
-        error: dbError?.message || dbError,
+        error: dbError.message || dbError,
       });
     }
   })(req, res, next);
