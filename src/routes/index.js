@@ -4,6 +4,7 @@ import { updateUserProfile } from "../controllers/profile/updateUserProfile.js";
 import { authenticateUser } from "../middleware/authenticateUser.js";
 import { logout } from "../controllers/logout.js";
 import { validateProfile } from "../middleware/validations/validators.js";
+import { getAllBadges } from "../controllers/badges/getAllBadges.js";
 
 const router = express.Router();
 
@@ -15,5 +16,6 @@ router.patch(
   validateProfile,
   updateUserProfile
 );
+router.get("/get-all-badges", authenticateUser, getAllBadges);
 
 export default router;

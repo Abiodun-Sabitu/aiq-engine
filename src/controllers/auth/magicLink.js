@@ -52,7 +52,7 @@ export const magicLink = async (req, res) => {
       await sendMail(userMailBox, content, subject);
       return res.status(201).json({
         message:
-          "Boom! Account’s ready. Hit the magic link sent to your email to log in",
+          "Boom! Account’s ready. Hit the magic link sent to your email to login",
       });
     }
   } catch (err) {

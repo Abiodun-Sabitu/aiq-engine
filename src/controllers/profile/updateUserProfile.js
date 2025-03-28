@@ -14,7 +14,9 @@ export const updateUserProfile = async (req, res) => {
   try {
     const isValidUser = await isAnExistingUser(email);
     if (!isValidUser) {
-      return res.status(403).json({ message: "Forbidden: unrecognized user" });
+      return res
+        .status(403)
+        .json({ message: "Access denied: You do not have permission" });
     }
     await updateProfile(email, profileData);
     const userDetails = await getUserDetails(email);
