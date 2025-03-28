@@ -1,4 +1,8 @@
-import { updateProfile, getUserDetails } from "../../models/user/onboarding.js";
+import {
+  updateProfile,
+  getUserDetails,
+  isAnExistingUser,
+} from "../../services/user/onboarding.js";
 
 export const updateUserProfile = async (req, res) => {
   const { email, ...profileData } = req.body;
@@ -8,6 +12,10 @@ export const updateUserProfile = async (req, res) => {
       .json({ message: "Email is required for this operation" });
   }
   try {
+    const isValidUser = await isAnExistingUser(email);
+    if (!isValidUser) {
+      return res.status(403).json({ message: "Forbidden: unrecognized user" });
+    }
     await updateProfile(email, profileData);
     const userDetails = await getUserDetails(email);
     return res

@@ -4,7 +4,7 @@ import {
   getAndSaveUserGoogleData,
   getUserDetails,
   updateLastLogin,
-} from "../../models/user/onboarding.js";
+} from "../../services/user/onboarding.js";
 import { generateTokens } from "../../helpers/generateToken.js";
 
 // Google OAuth Login

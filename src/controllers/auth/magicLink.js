@@ -1,12 +1,12 @@
 import crypto from "crypto";
-import { sendMail } from "../../services/emailService.js";
+import { sendMail } from "../../services/email/emailService.js";
 import dotenv from "dotenv";
-import { magicLinkEmail } from "../../mails/magicLinkEmail.js";
+import { magicLinkEmail } from "../../services/email/magicLinkEmail.js";
 import {
   findUserByEmail,
   createUserWithMagicLink,
   updateMagicLinkTokenAndExpiry,
-} from "../../models/user/onboarding.js";
+} from "../../services/user/onboarding.js";
 
 dotenv.config();
 
@@ -43,8 +43,7 @@ export const magicLink = async (req, res) => {
       subject = "Your AIQ magic login link";
       await sendMail(userMailBox, content, subject);
       return res.status(200).json({
-        message:
-          "Welcome back! Hit the magic link sent to your email to log in",
+        message: "Welcome back! Hit the magic link sent to your email to login",
       });
     } else {
       // Create new user

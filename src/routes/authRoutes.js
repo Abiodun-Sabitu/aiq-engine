@@ -12,12 +12,13 @@ import {
   twitterLogin,
   twitterCallback,
 } from "../controllers/auth/twitterAuth.js";
+import { validateEmail } from "../middleware/validations/validators.js";
 
 dotenv.config();
 
 const router = express.Router();
 
-router.post("/magic-link", magicLink);
+router.post("/magic-link", validateEmail, magicLink);
 router.get("/validate-magic-link", validateMagicLink);
 router.get("/google", googleLogin);
 router.get("/google/callback", googleCallback);

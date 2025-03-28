@@ -18,6 +18,13 @@ export const findUserByProviderID = async (providerId) => {
   return rows[0];
 };
 
+export const isAnExistingUser = async (email) => {
+  const { rows } = await db.query(`SELECT email FROM users WHERE email =$1`, [
+    email,
+  ]);
+  return rows.length > 0;
+};
+
 export const createUserWithMagicLink = async (
   email,
   magicLinkToken,

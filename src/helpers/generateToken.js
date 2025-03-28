@@ -7,7 +7,8 @@ export const generateTokens = (user) => {
   const accessToken = jwt.sign(
     { email: user.email, id: user.id },
     process.env.JWT_SECRET,
-    { expiresIn: "30m" } // Short-lived token
+    //{ expiresIn: "30m" } // Short-lived token
+    { expiresIn: "7d" } // Short-lived token
   );
 
   const refreshToken = jwt.sign(
