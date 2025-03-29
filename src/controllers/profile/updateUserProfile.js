@@ -22,9 +22,11 @@ export const updateUserProfile = async (req, res) => {
     const userDetails = await getUserDetails(email);
     return res
       .status(200)
-      .json({ message: "profile updated successfully", user: userDetails });
+      .json({ message: "profile updated successfully", data: userDetails });
   } catch (err) {
     console.error("Profile update error:", err);
-    return res.status(500).json({ message: "Failed to update profile" });
+    return res
+      .status(500)
+      .json({ message: "Failed to update profile", error: err.message });
   }
 };

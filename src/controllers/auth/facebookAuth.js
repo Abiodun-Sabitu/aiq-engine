@@ -72,7 +72,7 @@ export const facebookCallback = (req, res, next) => {
         req.session.destroy(() => {
           res
             .status(200)
-            .json({ message: "Login successful", user: userDetails });
+            .json({ message: "Login successful", data: userDetails });
         });
       });
     } catch (dbError) {

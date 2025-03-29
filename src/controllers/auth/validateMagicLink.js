@@ -56,9 +56,11 @@ export const validateMagicLink = async (req, res) => {
 
     res
       .status(200)
-      .json({ message: "Authentication successful", user: userDetails });
+      .json({ message: "Authentication successful", data: userDetails });
   } catch (err) {
     console.error("Error during magic link validation:", err);
-    res.status(500).json({ message: "Internal Server Error" });
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: err.message });
   }
 };
