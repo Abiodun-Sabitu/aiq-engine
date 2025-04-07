@@ -81,20 +81,23 @@ const createTables = async () => {
         question_text TEXT NOT NULL,
         options JSONB NOT NULL,
         correct_option INT NOT NULL,
-        difficulty TEXT CHECK (difficulty IN ('beginner', 'intermediate', 'advanced')) NOT NULL,
         fun_fact TEXT NOT NULL
       );
     `);
 
     await db.query(`
-      CREATE TABLE IF NOT EXISTS user_progress (
+          CREATE TABLE IF NOT EXISTS user_progress (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID REFERENCES users(id) ON DELETE CASCADE,
         quiz_id UUID REFERENCES quizzes(id) ON DELETE CASCADE,
-        current_question INT NOT NULL,
-        progress JSONB NOT NULL,
-        started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
+        last_answered_question UUID REFERENCES questions(id),
+        current_question UUID REFERENCES questions(id),
+        answered_questions UUID[] DEFAULT '{}',
+        current_question_no INT NOT NULL,
+        progress_status TEXT CHECK (progress_status IN ('in_progress', 'completed')) DEFAULT 'in_progress',
+        started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        completed_at TIMESTAMP DEFAULT NULL
+    );
     `);
 
     await db.query(`

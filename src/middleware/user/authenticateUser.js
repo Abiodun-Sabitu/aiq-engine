@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { generateTokens } from "../helpers/generateToken.js";
+import { generateTokens } from "../../helpers/generateToken.js";
 
 export const authenticateUser = async (req, res, next) => {
   try {

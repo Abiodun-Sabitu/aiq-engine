@@ -11,25 +11,24 @@ const db = new Pool({
 //Function to update the database schema
 const updateDatabase = async () => {
   try {
-    console.log("⏳ Applying users table updates...");
-
-    await db.query("BEGIN"); // Start transaction
-
-    //Add new columns (if they don't exist)
+    // Alter the user_progress table to add new columns
     await db.query(`
-      UPDATE users 
-      SET badge_id = (SELECT id FROM badges WHERE name = 'Rookie' LIMIT 1) 
-      WHERE badge_id IS NULL;
+      ALTER TABLE user_progress
+      DROP IF EXISTS progress,
+      DROP IF EXISTS current_question,
+      ADD COLUMN last_answered_question UUID REFERENCES questions(id),
+      ADD COLUMN current_question UUID REFERENCES questions(id),
+      ADD COLUMN answered_questions UUID[] DEFAULT '{}',
+      ADD COLUMN current_question_no INT NOT NULL,
+      ADD COLUMN progress_status TEXT CHECK (progress_status IN ('in_progress', 'completed')) DEFAULT 'in_progress',
+      ADD COLUMN completed_at TIMESTAMP DEFAULT NULL;
     `);
 
-    await db.query("COMMIT"); // Apply changes
-
-    console.log("✅ Users table updated successfully!");
+    console.log("✅ user_progress table updated successfully!");
   } catch (error) {
-    await db.query("ROLLBACK"); // Undo changes on error
-    console.error("❌ Error updating users table:", error);
+    console.error("❌ Error updating user_progress table:", error);
   } finally {
-    await db.end(); // Close DB connection
+    await db.end();
   }
 };
 

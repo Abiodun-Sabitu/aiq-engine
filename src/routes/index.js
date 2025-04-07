@@ -1,12 +1,13 @@
 import express from "express";
 import authRoutes from "./authRoutes.js";
 import { updateUserProfile } from "../controllers/profile/updateUserProfile.js";
-import { authenticateUser } from "../middleware/authenticateUser.js";
+import { authenticateUser } from "../middleware/user/authenticateUser.js";
 import { logout } from "../controllers/logout.js";
 import { validateProfile } from "../middleware/validations/validators.js";
 import { getAllBadges } from "../controllers/badges/getAllBadges.js";
 import { getBadgeById } from "../controllers/badges/getBadgeById.js";
 import { editBadgeDetails } from "../controllers/badges/editBadgeDetails.js";
+import { isAdmin } from "../middleware/admin/isAdmin.js";
 
 const router = express.Router();
 
@@ -20,6 +21,6 @@ router.patch(
 );
 router.get("/get-all-badges", authenticateUser, getAllBadges);
 router.get("/get-badge/:badgeId", authenticateUser, getBadgeById);
-router.post("/admin/edit-badge", authenticateUser, editBadgeDetails);
+router.post("/admin/edit-badge", authenticateUser, isAdmin, editBadgeDetails);
 
 export default router;

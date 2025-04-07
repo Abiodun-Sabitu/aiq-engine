@@ -25,6 +25,17 @@ export const isAnExistingUser = async (email) => {
   return rows.length > 0;
 };
 
+export const getUserRole = async (email) => {
+  const { rows } = await db.query(`SELECT role FROM users WHERE email=$1`, [
+    email,
+  ]);
+  if (rows.length === 0) {
+    throw new Error("invalid user role detected");
+  }
+  console.log({ "the role is": rows[0]?.role });
+  return rows[0].role;
+};
+
 export const createUserWithMagicLink = async (
   email,
   magicLinkToken,
