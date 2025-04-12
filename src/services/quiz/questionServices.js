@@ -12,7 +12,7 @@ export const fetchQuestions = async (
   perPage = 10
 ) => {
   // Calculate how many questions to skip based on the current page
-  const offset = (page - 1) * perPage;
+  const offset = (parseInt(page, 10) - 1) * perPage;
 
   const data = `
     SELECT id, question_text, options, fun_fact

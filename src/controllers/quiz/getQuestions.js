@@ -6,7 +6,7 @@ import { findUserByID } from "../../services/user/onboarding.js";
 
 export const getQuestions = async (req, res) => {
   const { userId } = req.params;
-  const { quizId } = req.query;
+  const { quizId, page } = req.query;
 
   if (!userId || !quizId) {
     return res.status(400).json({ message: "one of user or quiz id is null" });

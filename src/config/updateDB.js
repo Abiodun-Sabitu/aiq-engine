@@ -13,20 +13,14 @@ const updateDatabase = async () => {
   try {
     // Alter the user_progress table to add new columns
     await db.query(`
-      ALTER TABLE user_progress
-      DROP IF EXISTS progress,
-      DROP IF EXISTS current_question,
-      ADD COLUMN last_answered_question UUID REFERENCES questions(id),
-      ADD COLUMN current_question UUID REFERENCES questions(id),
-      ADD COLUMN answered_questions UUID[] DEFAULT '{}',
-      ADD COLUMN current_question_no INT NOT NULL,
-      ADD COLUMN progress_status TEXT CHECK (progress_status IN ('in_progress', 'completed')) DEFAULT 'in_progress',
-      ADD COLUMN completed_at TIMESTAMP DEFAULT NULL;
+      ALTER TABLE user_scores 
+      ADD COLUMN correctly_answered INT NOT NULL,
+      ADD COLUMN incorrectly_answered INT NOT NULL
     `);
 
-    console.log("✅ user_progress table updated successfully!");
+    console.log("✅ user_scores table updated successfully!");
   } catch (error) {
-    console.error("❌ Error updating user_progress table:", error);
+    console.error("❌ Error updating user_scores  table:", error);
   } finally {
     await db.end();
   }

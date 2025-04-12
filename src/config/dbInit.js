@@ -107,7 +107,9 @@ const createTables = async () => {
         quiz_id UUID REFERENCES quizzes(id) ON DELETE CASCADE,
         score INT NOT NULL,
         attempt_number INT NOT NULL,
-        completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        correctly_answered INT NOT NULL,
+        incorrectly_answered INT NOT NULL
       );
     `);
 
