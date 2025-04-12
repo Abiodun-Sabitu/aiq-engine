@@ -2,7 +2,7 @@ import Joi from "joi";
 
 export const profileSchema = Joi.object({
   email: Joi.string().email().required().messages({
-    "string.email": "Invalid email format",
+    "string.base": "Invalid email format",
     "any.required": "Email is required",
   }),
   username: Joi.string().min(3).max(30).required().messages({
@@ -21,8 +21,9 @@ export const profileSchema = Joi.object({
   country_flag: Joi.string().optional(),
 });
 
-export const emailSchema = Joi.string().email().required().messages({
-  "string.base": "Invalid email format",
-  "string.email": "Invalid email format",
-  "any.required": "Email is required",
+export const emailSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.email": "Invalid email format",
+    "any.required": "Email is required",
+  }),
 });

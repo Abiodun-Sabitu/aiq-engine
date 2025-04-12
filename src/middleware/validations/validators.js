@@ -12,6 +12,7 @@ export const validateProfile = (req, res, next) => {
 };
 
 export const validateEmail = (req, res, next) => {
+  //console.log(req.body);
   const { error } = emailSchema.validate(req.body, { abortEarly: false }); //
   if (error) {
     return res.status(400).json({

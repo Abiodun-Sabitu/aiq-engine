@@ -4,7 +4,7 @@ import { generateTokens } from "../../helpers/generateToken.js";
 export const authenticateUser = async (req, res, next) => {
   try {
     const { auth_token, refresh_token } = req.cookies;
-    console.log({ auth_token: auth_token, refresh_token: refresh_token });
+    // console.log({ auth_token: auth_token, refresh_token: refresh_token });
 
     if (!auth_token) return res.status(401).json({ message: "Unauthorized" });
 

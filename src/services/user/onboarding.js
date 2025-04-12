@@ -4,10 +4,15 @@ import db from "../../config/db.js";
 
 export const findUserByEmail = async (email) => {
   const { rows } = await db.query(
-    `SELECT email, magic_link_token, magic_link_expiry FROM users WHERE email = $1`,
+    `SELECT id, email, magic_link_token, magic_link_expiry FROM users WHERE email = $1`,
     [email]
   );
   return rows[0];
+};
+
+export const findUserByID = async (userId) => {
+  const { rows } = await db.query(`SELECT id from users WHERE id=$1`, [userId]);
+  return rows.length > 0;
 };
 
 export const findUserByProviderID = async (providerId) => {
