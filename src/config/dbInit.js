@@ -93,34 +93,36 @@ const createTables = async () => {
         last_answered_question UUID REFERENCES questions(id),
         current_question UUID REFERENCES questions(id),
         answered_questions UUID[] DEFAULT '{}',
-        current_question_no INT NOT NULL,
-        progress_status TEXT CHECK (progress_status IN ('not_started', 'in_progress', 'completed')) DEFAULT 'not_started',
-        started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        completed_at TIMESTAMP DEFAULT NULL
+        current_question_no INT NOT NULL DEFAULT 0,
+        progress_status TEXT CHECK (progress_status IN ('in_progress', 'completed')) DEFAULT 'in_progress'
+       
     );
     `);
 
+    // Create updated user_scores table
     await db.query(`
-      CREATE TABLE IF NOT EXISTS user_scores (
+      CREATE TABLE user_scores (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID REFERENCES users(id) ON DELETE CASCADE,
         quiz_id UUID REFERENCES quizzes(id) ON DELETE CASCADE,
-        score INT NOT NULL,
-        attempt_number INT NOT NULL,
-        completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        correctly_answered INT NOT NULL,
-        incorrectly_answered INT NOT NULL
+        score INT DEFAULT 0 NOT NULL,
+        correctly_answered INT DEFAULT 0 NOT NULL,
+        incorrectly_answered INT DEFAULT 0 NOT NULL
       );
     `);
 
+    // Create updated attempts_log table
     await db.query(`
-      CREATE TABLE IF NOT EXISTS attempts_log (
+      CREATE TABLE attempts_log (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID REFERENCES users(id) ON DELETE CASCADE,
         quiz_id UUID REFERENCES quizzes(id) ON DELETE CASCADE,
-        previous_score INT NOT NULL,
-        attempt_number INT NOT NULL,
+        attempt_number INT DEFAULT 0 NOT NULL,
         difficulty TEXT CHECK (difficulty IN ('beginner', 'intermediate', 'advanced')) NOT NULL,
+        started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        completed_at TIMESTAMP DEFAULT NULL,
+        time_taken INTERVAL,
+        previous_score INT DEFAULT 0 NOT NULL,
         attempt_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);

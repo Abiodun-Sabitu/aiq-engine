@@ -5,62 +5,106 @@ export const findQuizByID = async (id) => {
   return rows.length > 0;
 };
 
-export const initUserProgress = async (userId, quizId) => {
+export const initUserProgress = async (
+  userId,
+  quizId,
+  difficulty = "beginner"
+) => {
   const startedAt = new Date();
   const currentQuestionNo = 0;
-  const initData = `INSERT INTO user_progress (user_id, quiz_id, started_at, current_question_no) VALUES ($1, $2, $3, $4) RETURNING id, user_id, quiz_id, current_question_no, started_at`;
-  const { rows } = await db.query(initData, [
+
+  const startProgressQuery = `
+    INSERT INTO user_progress (user_id, quiz_id, current_question_no)
+    VALUES ($1, $2, $3)
+    RETURNING id, user_id, quiz_id, current_question_no;
+  `;
+
+  const logAttemptQuery = `
+    INSERT INTO attempts_log (
+      user_id,
+      quiz_id,
+      difficulty,
+      started_at,
+      attempt_number
+    )
+    VALUES (
+      $1,
+      $2,
+      $3,
+      $4,
+      COALESCE(
+        (SELECT COUNT(*) + 1 FROM attempts_log WHERE user_id = $1 AND quiz_id = $2),
+        1
+      )
+    )
+    RETURNING started_at;
+  `;
+
+  // Insert into user_progress table
+  const progressResult = await db.query(startProgressQuery, [
     userId,
     quizId,
-    startedAt,
     currentQuestionNo,
   ]);
-  if (rows.length > 0) {
-    return rows[0];
-  } else {
-    throw new Error("failed to initialize user progress");
+
+  if (progressResult.rows.length === 0) {
+    throw new Error(
+      "Failed to initialize user progress. No rows returned from user_progress insert."
+    );
   }
+
+  // Insert into attempts_log table
+  const logResult = await db.query(logAttemptQuery, [
+    userId,
+    quizId,
+    difficulty,
+    startedAt,
+  ]);
+
+  if (logResult.rows.length === 0) {
+    throw new Error(
+      "Failed to log attempt. No rows returned from attempts_log insert."
+    );
+  }
+
+  return {
+    ...progressResult.rows[0],
+    started_at: logResult.rows[0].started_at,
+  };
 };
 
-export const fetchQuestions = async (
-  quizId,
-  userId,
-  page = 1,
-  perPage = 10
-) => {
-  // Calculate how many questions to skip based on the current page
-  const offset = (parseInt(page, 10) - 1) * perPage;
+export const getProgressStatus = async (userId, quizId) => {
+  const { rows } = await db.query(
+    `SELECT progress_status FROM user_progress WHERE user_id = $1 AND quiz_id = $2`,
+    [userId, quizId]
+  );
+  return rows[0]?.progress_status || null;
+};
 
-  const data = `
-    SELECT id, question_text, options, fun_fact
+export const fetchQuestions = async (quizId, userId, perPage = 10) => {
+  const query = `
+    SELECT id, question_text, options
     FROM questions
     WHERE quiz_id = $1
       AND id NOT IN (
         SELECT UNNEST(answered_questions)
         FROM user_progress
-        WHERE user_id = $2
+        WHERE user_id = $2 AND quiz_id = $1
       )
     ORDER BY RANDOM()
-    LIMIT $3
-    OFFSET $4;
+    LIMIT $3;
   `;
 
   try {
-    // Run the query
-    const result = await db.query(data, [quizId, userId, perPage, offset]);
-    if (result?.rows.length > 0) {
-      return result.rows.map((row) => ({
-        id: row.id,
-        question_text: row.question_text,
-        options: row.options,
-      }));
-    } else {
-      return [];
-    }
-    // Return only selected fields: id, question_text, and options
+    const result = await db.query(query, [quizId, userId, perPage]);
+    return result.rows.map((row) => ({
+      id: row.id,
+      question_text: row.question_text,
+      options: row.options,
+    }));
   } catch (err) {
     console.error("Error fetching questions:", err);
-    throw new Error("Error fetching questions:", err);
+    throw new Error("Error fetching questions.");
   }
 };
 
@@ -77,9 +121,16 @@ export const fetchQuestions = async (
 //         completed_at TIMESTAMP DEFAULT NULL
 //     );
 
-//when user submits an answer, we need to do the following
-// 1. submit user selected option, question Id, userId, quizId to the backend
-// 2. backend will then update the following in user_progress table
-// answered question array id of answered question, last_answered_question, current_question_no, userId, quiz_id,
+//  CREATE TABLE IF NOT EXISTS user_scores (
+//         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+//         user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+//         quiz_id UUID REFERENCES quizzes(id) ON DELETE CASCADE,
+//         score INT NOT NULL,
+//         attempt_number INT NOT NULL,
+//         completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//         correctly_answered INT NOT NULL,
+//         incorrectly_answered INT NOT NULL
 
-// 3. then backend validates the answer submitted for correctness and return a feedback that consists of fun_fact, correct/incorrect,
+//when validating each answer submitted by a quiz taker, we need to do the following
+// update last answered question, current question no, answered question array on the use progress table
+// update

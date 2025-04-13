@@ -1,10 +1,19 @@
-import { initUserProgress } from "../../services/quiz/questionServices.js";
+import {
+  getProgressStatus,
+  initUserProgress,
+} from "../../services/quiz/questionServices.js";
 
 export const startQuiz = async (req, res) => {
   const { userId } = req.params;
-  const { quizId } = req.query;
+  const { quizId, difficulty } = req.query;
   try {
-    const userProgress = await initUserProgress(userId, quizId);
+    const progressStatus = await getProgressStatus(userId, quizId);
+    if (progressStatus === "in_progress") {
+      return res
+        .status(400)
+        .json({ message: "You already have a running quiz" });
+    }
+    const userProgress = await initUserProgress(userId, quizId, difficulty);
     return res.status(200).json({
       message: "Quiz started successfully",
       data: userProgress,
