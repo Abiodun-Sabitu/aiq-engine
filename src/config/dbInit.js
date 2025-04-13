@@ -94,7 +94,7 @@ const createTables = async () => {
         current_question UUID REFERENCES questions(id),
         answered_questions UUID[] DEFAULT '{}',
         current_question_no INT NOT NULL,
-        progress_status TEXT CHECK (progress_status IN ('in_progress', 'completed')) DEFAULT 'in_progress',
+        progress_status TEXT CHECK (progress_status IN ('not_started', 'in_progress', 'completed')) DEFAULT 'not_started',
         started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         completed_at TIMESTAMP DEFAULT NULL
     );

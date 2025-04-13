@@ -9,6 +9,8 @@ import { getBadgeById } from "../controllers/badges/getBadgeById.js";
 import { editBadgeDetails } from "../controllers/badges/editBadgeDetails.js";
 import { isAdmin } from "../middleware/admin/isAdmin.js";
 import { getQuestions } from "../controllers/quiz/getQuestions.js";
+import { validateUserAndQuizID } from "../middleware/quiz/validateUserAndQuizId.js";
+import { startQuiz } from "../controllers/quiz/startQuiz.js";
 
 const router = express.Router();
 
@@ -23,6 +25,17 @@ router.patch(
 router.get("/get-all-badges", authenticateUser, getAllBadges);
 router.get("/get-badge/:badgeId", authenticateUser, getBadgeById);
 router.post("/admin/edit-badge", authenticateUser, isAdmin, editBadgeDetails);
-router.get("/get-quiz-questions/:userId", authenticateUser, getQuestions);
+router.post(
+  "/start-quiz/:userId",
+  authenticateUser,
+  validateUserAndQuizID,
+  startQuiz
+);
+router.get(
+  "/get-quiz-questions/:userId",
+  authenticateUser,
+  validateUserAndQuizID,
+  getQuestions
+);
 
 export default router;

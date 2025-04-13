@@ -1,24 +1,8 @@
-import {
-  fetchQuestions,
-  isValidQuizId,
-} from "../../services/quiz/questionServices.js";
-import { findUserByID } from "../../services/user/onboarding.js";
+import { fetchQuestions } from "../../services/quiz/questionServices.js";
 
 export const getQuestions = async (req, res) => {
   const { userId } = req.params;
-  const { quizId, page } = req.query;
-
-  if (!userId || !quizId) {
-    return res.status(400).json({ message: "one of user or quiz id is null" });
-  }
-
-  const isExistingUser = await findUserByID(userId);
-  const correctQuizId = await isValidQuizId(quizId);
-  if (!isExistingUser || !correctQuizId) {
-    return res
-      .status(400)
-      .json({ message: "unknown user or quiz id detected" });
-  }
+  const { quizId } = req.query;
 
   try {
     const fetchedQuestions = await fetchQuestions(quizId, userId);
@@ -28,6 +12,8 @@ export const getQuestions = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({ message: "Error fetching questions" });
+    return res
+      .status(500)
+      .json({ message: "Error fetching questions", error: err });
   }
 };

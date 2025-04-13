@@ -8,19 +8,19 @@ const db = new Pool({
   connectionString: process.env.DATABASE_URL, // Ensure your DB connection is set in .env
 });
 
-//Function to update the database schema
 const updateDatabase = async () => {
   try {
-    // Alter the user_progress table to add new columns
+    // Alter the user_progress table to modify the progress_status column
     await db.query(`
-      ALTER TABLE user_scores 
-      ADD COLUMN correctly_answered INT NOT NULL,
-      ADD COLUMN incorrectly_answered INT NOT NULL
+      ALTER TABLE user_progress
+  ALTER COLUMN progress_status SET DEFAULT 'in_progress',
+  DROP CONSTRAINT IF EXISTS progress_status_check,
+  ADD CONSTRAINT progress_status_check CHECK (progress_status IN ('in_progress', 'completed'));
     `);
 
-    console.log("✅ user_scores table updated successfully!");
+    console.log("✅ user_progress table updated successfully!");
   } catch (error) {
-    console.error("❌ Error updating user_scores  table:", error);
+    console.error("❌ Error updating user_progress table:", error);
   } finally {
     await db.end();
   }
