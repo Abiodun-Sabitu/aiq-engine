@@ -1,4 +1,4 @@
-import { fetchQuestions } from "../../services/quiz/questionServices.js";
+import { fetchQuestions } from "../../services/quiz/quizServices.js";
 
 export const getQuestions = async (req, res) => {
   const { userId } = req.params;

@@ -1,5 +1,5 @@
 import { findUserByID } from "../../services/user/onboarding.js";
-import { findQuizByID } from "../../services/quiz/questionServices.js";
+import { findQuizByID } from "../../services/quiz/quizServices.js";
 
 export const validateUserAndQuizID = async (req, res, next) => {
   const { userId } = req.params;
